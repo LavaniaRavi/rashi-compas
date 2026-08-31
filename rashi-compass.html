@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kundali Compass</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    background: radial-gradient(circle at 50% 0%, #1a1a2e 0%, #0d0d16 60%, #08080d 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #f0ede4;
+  }
+  .wrap { display: flex; flex-direction: column; align-items: center; padding: 24px 16px 40px; max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 15px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; color: #c9a15a; margin: 0 0 2px; text-align: center; }
+  .sub { font-size: 11px; color: #7a7a88; margin-bottom: 20px; text-align: center; }
+  h2.section-title {
+    font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #c9a15a; margin: 26px 0 4px; font-weight: 600; text-align: center;
+  }
+  .section-sub { font-size: 10.5px; color: #6f6f80; margin-bottom: 12px; text-align: center; max-width: 300px; }
+
+  .panel {
+    width: 100%;
+    background: linear-gradient(145deg, #1c1c2a, #14141e);
+    border: 1px solid rgba(201,161,90,0.25);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+  .panel h2 {
+    font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #c9a15a; margin: 0 0 12px; font-weight: 600;
+  }
+  .planet-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-wrap: wrap;
+  }
+  .planet-row:last-child { border-bottom: none; }
+  .planet-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .planet-label { flex: 0 0 62px; font-size: 13px; color: #d8d5c9; }
+  .planet-row select {
+    flex: 1.6;
+    background: #0d0d16;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #f0ede4;
+    padding: 8px 4px;
+    font-size: 12px;
+    min-width: 0;
+  }
+  .deg-min { flex: 1.4; display: flex; align-items: center; gap: 3px; min-width: 0; }
+  .planet-row select.deg-input,
+  .planet-row select.min-input {
+    background: #0d0d16;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #f0ede4;
+    padding: 8px 4px;
+    font-size: 13px;
+    min-width: 0;
+    text-align: center;
+    flex: 1;
+  }
+  .planet-row .unit { font-size: 11px; color: #7a7a88; flex: 0 0 auto; }
+
+  button.calc {
+    margin-top: 14px; width: 100%; padding: 13px; border-radius: 12px; border: none;
+    background: linear-gradient(145deg, #c9a15a, #a97f3f); color: #14141e;
+    font-weight: 700; font-size: 14px; letter-spacing: 0.3px;
+  }
+  button.calc:active { transform: scale(0.98); }
+
+  .save-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .save-row:last-of-type { margin-bottom: 0; }
+  .save-row input[type="text"], .save-row select {
+    flex: 1;
+    background: #0d0d16;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #f0ede4;
+    padding: 9px 10px;
+    font-size: 13px;
+    min-width: 0;
+  }
+  .save-row input::placeholder { color: #55556a; }
+  button.save-btn {
+    flex: 0 0 auto; padding: 9px 16px; border-radius: 8px; border: none;
+    background: linear-gradient(145deg, #c9a15a, #a97f3f); color: #14141e;
+    font-weight: 700; font-size: 13px;
+  }
+  button.delete-btn {
+    flex: 0 0 auto; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(230,120,120,0.4);
+    background: rgba(230,120,120,0.12); color: #e67878; font-weight: 700; font-size: 13px;
+  }
+  .save-status { font-size: 11px; color: #7a7a88; margin-top: 6px; min-height: 14px; }
+
+  .results { width: 100%; margin-bottom: 8px; display: none; }
+  .results.show { display: block; }
+  .result-card {
+    display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(145deg, #1c1c2a, #14141e);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .result-card.aligned { border-color: rgba(255,255,255,0.6); box-shadow: 0 0 14px rgba(255,255,255,0.25); }
+  .result-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .result-main { flex: 1; }
+  .result-planet { font-size: 11.5px; color: #9d9db0; }
+  .result-rashi { font-size: 15px; font-weight: 700; color: #f0ede4; }
+  .result-dir { font-size: 12px; color: #c9a15a; text-align: right; }
+  .result-range { font-size: 10px; color: #6f6f80; text-align: right; }
+
+  .compass-shell {
+    position: relative;
+    width: min(92vw, 420px);
+    height: min(92vw, 420px);
+    margin: 10px 0 16px;
+  }
+  .ring { position: absolute; inset: 0; border-radius: 50%;
+    background: linear-gradient(160deg, #1e1e2f, #101018);
+    box-shadow: 0 0 0 1px rgba(201,161,90,0.25), 0 20px 50px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.5);
+  }
+  .dial { position: absolute; inset: 10%; border-radius: 50%; transition: transform 0.15s ease-out; }
+  .dial svg { width: 100%; height: 100%; display: block; }
+  .center-readout { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+  .deg { font-size: 15px; font-weight: 700; color: #f0ede4; letter-spacing: 0.5px; }
+  .needle { position: absolute; top: 4%; left: 50%; width: 2px; height: 8%; background: #d94f4f; transform: translateX(-50%); border-radius: 2px; z-index: 5; }
+
+  .status { margin-top: 4px; font-size: 12px; color: #7a7a88; text-align: center; max-width: 300px; line-height: 1.5; }
+  button.startbtn {
+    margin-top: 14px; padding: 12px 26px; border-radius: 30px; border: none;
+    background: linear-gradient(145deg, #c9a15a, #a97f3f); color: #14141e;
+    font-weight: 700; font-size: 14px; letter-spacing: 0.3px;
+  }
+  button.startbtn:active { transform: scale(0.97); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #9d9db0; transition: color 0.15s ease; }
+  .legend-item.aligned { color: #f0ede4; font-weight: 700; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+  .placeholder-note {
+    font-size: 12px; color: #6f6f80; text-align: center; max-width: 260px;
+    padding: 20px 0;
+  }
+  .divider {
+    width: 100%; height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0 4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kundali Compass</h1>
+  <div class="sub">Navagraha directions from your Ascendant, mapped onto a real compass</div>
+
+  <div class="panel" style="border-color: rgba(217,79,76,0.4);">
+    <h2 style="color:#e0847a;">Ascendant (Lagna) — Reference Point</h2>
+    <div class="planet-row">
+      <div class="planet-dot" style="background:#e0847a"></div>
+      <div class="planet-label">Asc</div>
+      <select id="rashi-asc"><option value="">Sign…</option></select>
+      <div class="deg-min">
+        <select class="deg-input" id="deg-asc"></select>
+        <span class="unit">°</span>
+        <select class="min-input" id="min-asc"></select>
+        <span class="unit">'</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Planet Degrees</h2>
+    <div id="planetRows"></div>
+    <button class="calc" id="calcBtn">Calculate Directions</button>
+  </div>
+
+  <div class="panel">
+    <h2>Save / Load Chart</h2>
+    <div class="save-row">
+      <input type="text" id="chartNameInput" placeholder="Chart name (e.g. My Chart)">
+      <button class="save-btn" id="saveChartBtn">Save</button>
+    </div>
+    <div class="save-row">
+      <select id="savedChartsSelect"><option value="">Load a saved chart…</option></select>
+      <button class="delete-btn" id="deleteChartBtn" title="Delete selected chart">✕</button>
+    </div>
+    <div class="save-status" id="saveStatus"></div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <h2 class="section-title">Kundali Compass</h2>
+  <div class="section-sub">Each Rashi sits at its real, true-compass direction (matches a standard compass exactly). House numbers are computed from your Ascendant as labels only — they don't move anything.</div>
+
+  <div class="compass-shell">
+    <div class="ring"></div>
+    <div class="dial" id="dialKundali">
+      <svg viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <g id="kundaliTicks"></g>
+        <g id="kundaliDegreeNums" font-family="-apple-system, sans-serif" text-anchor="middle"></g>
+        <g id="kundaliSpokes"></g>
+        <g id="kundaliSectorFlash"></g>
+        <g id="kundaliLabels" font-family="-apple-system, sans-serif" text-anchor="middle"></g>
+        <g id="kundaliMarkers"></g>
+      </svg>
+    </div>
+    <div class="needle"></div>
+    <div class="center-readout"><div class="deg" id="degKundali">--°</div></div>
+  </div>
+  <div id="kundaliPlaceholder" class="placeholder-note" style="display:none;">Enter your Ascendant above and tap Calculate to see house numbers.</div>
+  <div class="section-sub" id="kundaliHint">Rashi positions are fixed to their real-world direction (e.g. Virgo = true North). Enter your Ascendant to also see house numbers.</div>
+
+  <button class="startbtn" id="startBtn">Start Compass</button>
+  <div class="status" id="statusMsg">Hold phone flat once started.</div>
+
+  <div class="legend" id="legend"></div>
+</div>
+
+<script>
+const RASHI = [
+  { n:1, name:"Aries",       dir:"East",        lo:0,   hi:30,  bearing:90 },
+  { n:2, name:"Taurus",      dir:"NW (WNW)",    lo:30,  hi:60,  bearing:315 },
+  { n:3, name:"Gemini",      dir:"NNW",         lo:60,  hi:90,  bearing:337.5 },
+  { n:4, name:"Cancer",      dir:"NNE",         lo:90,  hi:120, bearing:22.5 },
+  { n:5, name:"Leo",         dir:"ENE",         lo:120, hi:150, bearing:67.5 },
+  { n:6, name:"Virgo",       dir:"North",       lo:150, hi:180, bearing:0 },
+  { n:7, name:"Libra",       dir:"WSW",         lo:180, hi:210, bearing:247.5 },
+  { n:8, name:"Scorpio",     dir:"SSW (SW)",    lo:210, hi:240, bearing:202.5 },
+  { n:9, name:"Sagittarius", dir:"NE",          lo:240, hi:270, bearing:45 },
+  { n:10,name:"Capricorn",  dir:"South (SSE)",  lo:270, hi:300, bearing:180 },
+  { n:11,name:"Aquarius",   dir:"West (WSW)",   lo:300, hi:330, bearing:270 },
+  { n:12,name:"Pisces",     dir:"SE",           lo:330, hi:360, bearing:135 },
+];
+
+const PLANETS = [
+  { key:"su", label:"Sun",     color:"#e8b84b" },
+  { key:"mo", label:"Moon",    color:"#d8d8e0" },
+  { key:"ma", label:"Mars",    color:"#e05d4c" },
+  { key:"me", label:"Mercury", color:"#4bc98f" },
+  { key:"ju", label:"Jupiter", color:"#e0a83f" },
+  { key:"ve", label:"Venus",   color:"#e08fd0" },
+  { key:"sa", label:"Saturn",  color:"#6a7bd0" },
+  { key:"ra", label:"Rahu",    color:"#8d8d8d" },
+  { key:"ke", label:"Ketu",    color:"#a86a3f" },
+];
+
+// ---------- Static lookup: which Rashi a given absolute zodiac degree falls in ----------
+function findRashi(deg) {
+  const d = ((deg % 360) + 360) % 360;
+  return RASHI.find(r => d >= r.lo && d < r.hi) || RASHI[RASHI.length - 1];
+}
+
+// ---------- Kundali Compass bearing math ----------
+// Ascendant sign = House 1 = true East (90°). Houses run ANTICLOCKWISE, 30° each,
+// so House 4 = North, House 7 = West, House 10 = South (classical Kendra convention).
+function houseFor(planetSignIndex, ascSignIndex) {
+  return ((planetSignIndex - ascSignIndex + 12) % 12) + 1;
+}
+
+// ---------- Build Ascendant + Planet input rows ----------
+// Build <option> lists for degree (0–29) and minute (0–59) dropdowns —
+// capped below 30/60 so a selection can never accidentally roll into the next sign.
+function degOptions() {
+  let html = '';
+  for (let d = 0; d < 30; d++) html += `<option value="${d}">${d}</option>`;
+  return html;
+}
+function minOptions() {
+  let html = '';
+  for (let m = 0; m < 60; m++) html += `<option value="${m}">${m}</option>`;
+  return html;
+}
+
+const ascSelect = document.getElementById('rashi-asc');
+RASHI.forEach(r => {
+  const opt = document.createElement('option');
+  opt.value = r.n; opt.textContent = r.name;
+  ascSelect.appendChild(opt);
+});
+document.getElementById('deg-asc').innerHTML = degOptions();
+document.getElementById('min-asc').innerHTML = minOptions();
+
+const rowsEl = document.getElementById('planetRows');
+PLANETS.forEach(p => {
+  const row = document.createElement('div');
+  row.className = 'planet-row';
+  row.innerHTML = `
+    <div class="planet-dot" style="background:${p.color}"></div>
+    <div class="planet-label">${p.label}</div>
+    <select id="rashi-${p.key}">
+      <option value="">Sign…</option>
+      ${RASHI.map(r => `<option value="${r.n}">${r.name}</option>`).join('')}
+    </select>
+    <div class="deg-min">
+      <select class="deg-input" id="deg-${p.key}">${degOptions()}</select>
+      <span class="unit">°</span>
+      <select class="min-input" id="min-${p.key}">${minOptions()}</select>
+      <span class="unit">'</span>
+    </div>
+  `;
+  rowsEl.appendChild(row);
+});
+
+// ================= NORMAL COMPASS removed — Kundali is now the single, accurate compass =================
+
+// Fixed outer degree ring on the Kundali dial (0°–350°, every 10°), rotates together
+// with the sectors since it's part of the same dial group — this is real true-compass
+// degree, independent of Ascendant.
+function drawDegreeRing(groupId) {
+  const g = document.getElementById(groupId);
+  for (let d = 0; d < 360; d += 10) {
+    const rad = (d - 90) * Math.PI / 180;
+    const radius = 93;
+    const x = 100 + radius * Math.cos(rad), y = 100 + radius * Math.sin(rad);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', x); t.setAttribute('y', y + 2);
+    t.textContent = d;
+    t.setAttribute('font-size', '5.5');
+    t.setAttribute('fill', d === 0 ? '#d94f4f' : '#6f6f80');
+    t.setAttribute('font-weight', d === 0 ? '700' : '400');
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-family', '-apple-system, sans-serif');
+    g.appendChild(t);
+  }
+}
+drawDegreeRing('kundaliDegreeNums');
+
+// ================= KUNDALI COMPASS (dynamic, rebuilt on Calculate) =================
+const kundaliTicks = document.getElementById('kundaliTicks');
+const kundaliSpokes = document.getElementById('kundaliSpokes');
+const kundaliLabels = document.getElementById('kundaliLabels');
+const kundaliMarkers = document.getElementById('kundaliMarkers');
+const sectorFlashG = document.getElementById('kundaliSectorFlash');
+const kundaliPlaceholder = document.getElementById('kundaliPlaceholder');
+
+let currentBearingByRashi = {};
+let rashiSectorBounds = {};
+
+function renderKundaliRing(ascSignIndex) {
+  kundaliTicks.innerHTML = '';
+  kundaliSpokes.innerHTML = '';
+  kundaliLabels.innerHTML = '';
+  kundaliMarkers.innerHTML = '';
+  currentBearingByRashi = {};
+
+  kundaliPlaceholder.style.display = 'none';
+  document.querySelector('#dialKundali').closest('.compass-shell').style.opacity = '1';
+
+  // Fixed real-world positions, sorted so we can find each sign's true neighbor
+  // for placing boundary spokes at the correct (possibly uneven) midpoint.
+  const sortedByBearing = [...RASHI].sort((a, b) => a.bearing - b.bearing);
+
+  RASHI.forEach(r => {
+    currentBearingByRashi[r.n] = r.bearing; // always fixed — never rotates with Ascendant
+    const house = ascSignIndex !== null ? houseFor(r.n, ascSignIndex) : null;
+    const isAsc = house === 1;
+
+    const rad = (r.bearing - 90) * Math.PI / 180;
+
+    // Small outward tick pointing to this sign's fixed real-world bearing
+    const tick = document.createElementNS('http://www.w3.org/2000/svg','line');
+    const r1 = 82, r2 = 90;
+    tick.setAttribute('x1', 100 + r1 * Math.cos(rad));
+    tick.setAttribute('y1', 100 + r1 * Math.sin(rad));
+    tick.setAttribute('x2', 100 + r2 * Math.cos(rad));
+    tick.setAttribute('y2', 100 + r2 * Math.sin(rad));
+    tick.setAttribute('stroke', isAsc ? '#e0847a' : '#c9a15a');
+    tick.setAttribute('stroke-width', isAsc ? 2.5 : 2);
+    kundaliTicks.appendChild(tick);
+
+    const directionWord = r.dir.replace(/\s*\(.*\)/, '').trim();
+
+    // Direction word — outermost (matches real compass exactly, e.g. Virgo = true North)
+    const outerR = 74;
+    const ox = 100 + outerR * Math.cos(rad), oy = 100 + outerR * Math.sin(rad);
+    const t1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t1.setAttribute('x', ox); t1.setAttribute('y', oy + 3);
+    t1.textContent = directionWord;
+    t1.setAttribute('font-size', '8');
+    t1.setAttribute('fill', isAsc ? '#e0847a' : '#e5e2d8');
+    t1.setAttribute('font-weight', isAsc ? '700' : '600');
+    kundaliLabels.appendChild(t1);
+
+    // Rashi name — middle position
+    const midR = 56;
+    const mx2 = 100 + midR * Math.cos(rad), my2 = 100 + midR * Math.sin(rad);
+    const t2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t2.setAttribute('x', mx2); t2.setAttribute('y', my2 + 3);
+    t2.textContent = r.name;
+    t2.setAttribute('font-size', '7');
+    t2.setAttribute('font-weight', isAsc ? '700' : '500');
+    t2.setAttribute('fill', isAsc ? '#e0847a' : '#9d9db0');
+    kundaliLabels.appendChild(t2);
+
+    // House number — innermost, only shown once an Ascendant is entered
+    if (house !== null) {
+      const innerR = 40;
+      const ix = 100 + innerR * Math.cos(rad), iy = 100 + innerR * Math.sin(rad);
+      const t3 = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t3.setAttribute('x', ix); t3.setAttribute('y', iy + 3);
+      t3.textContent = 'H' + house;
+      t3.setAttribute('font-size', isAsc ? '9.5' : '7.5');
+      t3.setAttribute('font-weight', isAsc ? '800' : '500');
+      t3.setAttribute('fill', isAsc ? '#e0847a' : '#d9b877');
+      kundaliLabels.appendChild(t3);
+
+      if (isAsc) {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        circle.setAttribute('cx', ix); circle.setAttribute('cy', iy);
+        circle.setAttribute('r', 11);
+        circle.setAttribute('fill', 'none');
+        circle.setAttribute('stroke', '#e0847a');
+        circle.setAttribute('stroke-width', 1.3);
+        circle.setAttribute('opacity', '0.6');
+        kundaliLabels.appendChild(circle);
+      }
+    }
+  });
+
+  // Compute each Rashi's full sector boundaries (left/right edges), reusing the same
+  // midpoint-between-neighbors logic as the boundary spokes — used for the sector flash.
+  const boundaries = sortedByBearing.map((curr, i) => {
+    const next = sortedByBearing[(i + 1) % sortedByBearing.length];
+    let gap = next.bearing - curr.bearing;
+    if (gap <= 0) gap += 360;
+    return (curr.bearing + gap / 2) % 360;
+  });
+  rashiSectorBounds = {};
+  sortedByBearing.forEach((r, i) => {
+    const start = boundaries[(i - 1 + boundaries.length) % boundaries.length];
+    const end = boundaries[i];
+    rashiSectorBounds[r.n] = { start, end };
+  });
+
+  // Boundary spokes at the true midpoint between each sign and its real neighbor
+  // (handles the naturally uneven 22.5°/45° gaps correctly, instead of assuming 30°)
+  for (let i = 0; i < sortedByBearing.length; i++) {
+    const curr = sortedByBearing[i];
+    const next = sortedByBearing[(i + 1) % sortedByBearing.length];
+    let gap = next.bearing - curr.bearing;
+    if (gap <= 0) gap += 360;
+    const boundaryBearing = (curr.bearing + gap / 2) % 360;
+    const boundaryRad = (boundaryBearing - 90) * Math.PI / 180;
+    const spoke = document.createElementNS('http://www.w3.org/2000/svg','line');
+    spoke.setAttribute('x1', 100 + 16 * Math.cos(boundaryRad));
+    spoke.setAttribute('y1', 100 + 16 * Math.sin(boundaryRad));
+    spoke.setAttribute('x2', 100 + 80 * Math.cos(boundaryRad));
+    spoke.setAttribute('y2', 100 + 80 * Math.sin(boundaryRad));
+    spoke.setAttribute('stroke', 'rgba(201,161,90,0.3)');
+    spoke.setAttribute('stroke-width', 1);
+    kundaliSpokes.appendChild(spoke);
+  }
+}
+renderKundaliRing(null);
+
+// ================= Calculate button: planets + results + ring refresh =================
+const calcBtn = document.getElementById('calcBtn');
+const resultsEl = document.getElementById('results');
+const legendEl = document.getElementById('legend');
+let markerEls = [];
+let activePlanets = [];
+
+let currentAscSignIndex = null;
+
+calcBtn.addEventListener('click', () => {
+  activePlanets = [];
+  resultsEl.innerHTML = '';
+  legendEl.innerHTML = '';
+  markerEls = [];
+
+  const ascRashiNum = ascSelect.value;
+  const ascSignIndex = ascRashiNum === '' ? null : parseInt(ascRashiNum, 10);
+  currentAscSignIndex = ascSignIndex;
+
+  renderKundaliRing(ascSignIndex);
+
+  if (ascSignIndex !== null) {
+    const ascDegInput = document.getElementById('deg-asc');
+    const ascMinInput = document.getElementById('min-asc');
+    const ascDegPart = ascDegInput.value.trim() === '' ? 0 : parseFloat(ascDegInput.value);
+    const ascMinPart = ascMinInput.value.trim() === '' ? 0 : parseFloat(ascMinInput.value);
+    const ascMatch = RASHI.find(r => r.n === ascSignIndex);
+    const ascAbsolute = ascMatch.lo + ascDegPart + (ascMinPart / 60);
+    activePlanets.push({
+      planet: { key:'asc', label:'Ascendant', color:'#e0847a' },
+      degPart: ascDegPart, minPart: ascMinPart, absoluteDeg: ascAbsolute,
+      match: ascMatch, house: 1
+    });
+  }
+
+  PLANETS.forEach(p => {
+    const rashiSelect = document.getElementById('rashi-' + p.key);
+    const degInput = document.getElementById('deg-' + p.key);
+    const minInput = document.getElementById('min-' + p.key);
+    const rashiNum = rashiSelect.value;
+    if (rashiNum === '') return;
+    const degVal = degInput.value.trim();
+    const minVal = minInput.value.trim();
+    const degPart = degVal === '' ? 0 : parseFloat(degVal);
+    const minPart = minVal === '' ? 0 : parseFloat(minVal);
+    if (isNaN(degPart) || isNaN(minPart)) return;
+    const match = RASHI.find(r => r.n === parseInt(rashiNum, 10));
+    const absoluteDeg = match.lo + degPart + (minPart / 60);
+    const house = ascSignIndex !== null ? houseFor(match.n, ascSignIndex) : null;
+    activePlanets.push({ planet: p, degPart, minPart, absoluteDeg, match, house });
+  });
+
+  if (activePlanets.length === 0) {
+    resultsEl.classList.remove('show');
+    rashisWithPlanets = new Set();
+    return;
+  }
+
+  rashisWithPlanets = new Set(activePlanets.map(item => item.match.n));
+
+  resultsEl.classList.add('show');
+  activePlanets.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = `
+      <div class="result-dot" style="background:${item.planet.color}"></div>
+      <div class="result-main">
+        <div class="result-planet">${item.planet.label} · ${item.match.name} ${item.degPart}°${item.minPart}' (${item.absoluteDeg.toFixed(2)}° abs)${item.house !== null && item.house !== undefined ? ' · House ' + item.house : ''}</div>
+        <div class="result-rashi">${item.match.name}</div>
+      </div>
+      <div>
+        <div class="result-dir">${item.match.dir}</div>
+        <div class="result-range">${item.match.lo}°–${item.match.hi}°</div>
+      </div>
+    `;
+    resultsEl.appendChild(card);
+
+    if (ascSignIndex !== null) {
+      const bearing = currentBearingByRashi[item.match.n];
+      const rad = (bearing - 90) * Math.PI / 180;
+      const mx = 100 + 84 * Math.cos(rad);
+      const my = 100 + 84 * Math.sin(rad);
+      const marker = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      marker.setAttribute('cx', mx);
+      marker.setAttribute('cy', my);
+      marker.setAttribute('r', 5);
+      marker.setAttribute('fill', item.planet.color);
+      marker.setAttribute('stroke', '#08080d');
+      marker.setAttribute('stroke-width', 1.3);
+      marker.style.transition = 'r 0.12s ease, filter 0.12s ease';
+      kundaliMarkers.appendChild(marker);
+
+      const legendItem = document.createElement('div');
+      legendItem.className = 'legend-item';
+      legendItem.id = 'legend-' + idx;
+      legendItem.innerHTML = `<div class="legend-dot" style="background:${item.planet.color}"></div>${item.planet.label}: ${item.match.name} (H${item.house})`;
+      legendEl.appendChild(legendItem);
+
+      markerEls.push({ el: marker, card: card, legendItem: legendItem, bearing: bearing, color: item.planet.color, wasAligned: false });
+    }
+  });
+});
+
+// ================= Live compass: single Kundali dial =================
+const dialKundali = document.getElementById('dialKundali');
+const degKundali = document.getElementById('degKundali');
+const startBtn = document.getElementById('startBtn');
+const statusMsg = document.getElementById('statusMsg');
+
+const ALIGN_THRESHOLD = 6;
+let rashisWithPlanets = new Set();
+
+function checkAlignment(h) {
+  markerEls.forEach(m => {
+    let diff = Math.abs(((h - m.bearing + 540) % 360) - 180);
+    const aligned = diff <= ALIGN_THRESHOLD;
+    if (aligned) {
+      m.el.setAttribute('r', 9);
+      m.el.style.filter = `drop-shadow(0 0 6px ${m.color})`;
+      m.card.classList.add('aligned');
+      m.legendItem.classList.add('aligned');
+      if (!m.wasAligned && typeof navigator.vibrate === 'function') navigator.vibrate(40);
+    } else {
+      m.el.setAttribute('r', 5);
+      m.el.style.filter = 'none';
+      m.card.classList.remove('aligned');
+      m.legendItem.classList.remove('aligned');
+    }
+    m.wasAligned = aligned;
+  });
+}
+
+// Flash whichever Rashi sector the needle currently sits over — light yellow normally,
+// light green if that Rashi has one of your entered planets in it. Fills the WHOLE
+// wedge (from center out to the tick ring), not just a dot at the label.
+let lastFlashedRashi = null;
+function polarToXY(bearing, radius) {
+  const rad = (bearing - 90) * Math.PI / 180;
+  return { x: 100 + radius * Math.cos(rad), y: 100 + radius * Math.sin(rad) };
+}
+const TRIKONA_HOUSES = [1, 5, 9];   // auspicious — light green
+const DUSTHANA_HOUSES = [6, 8, 12]; // malefic — light red
+
+function updateSectorFlash(h) {
+  let nearest = null, minDiff = Infinity;
+  RASHI.forEach(r => {
+    const diff = Math.abs(((h - r.bearing + 540) % 360) - 180);
+    if (diff < minDiff) { minDiff = diff; nearest = r; }
+  });
+  if (!nearest) return;
+
+  if (lastFlashedRashi !== nearest.n) {
+    if (typeof navigator.vibrate === 'function') navigator.vibrate(15);
+  }
+  lastFlashedRashi = nearest.n;
+
+  // No Ascendant = no house numbers = nothing to flash
+  if (currentAscSignIndex === null) {
+    sectorFlashG.innerHTML = '';
+    return;
+  }
+
+  const house = houseFor(nearest.n, currentAscSignIndex);
+  let fillColor = null, strokeColor = null;
+  if (TRIKONA_HOUSES.includes(house)) {
+    fillColor = 'rgba(150,230,150,0.32)';
+    strokeColor = '#8fd98f';
+  } else if (DUSTHANA_HOUSES.includes(house)) {
+    fillColor = 'rgba(230,120,120,0.32)';
+    strokeColor = '#e67878';
+  }
+
+  if (!fillColor) {
+    sectorFlashG.innerHTML = '';
+    return;
+  }
+
+  const bounds = rashiSectorBounds[nearest.n];
+  if (!bounds) return;
+  let { start, end } = bounds;
+  if (end <= start) end += 360; // handle wraparound across 0°/360°
+  const span = end - start;
+  const largeArc = span > 180 ? 1 : 0;
+
+  const innerR = 14, outerR = 90;
+  const innerStart = polarToXY(start, innerR);
+  const outerStart = polarToXY(start, outerR);
+  const outerEnd = polarToXY(end, outerR);
+  const innerEnd = polarToXY(end, innerR);
+
+  const d = [
+    `M ${innerStart.x} ${innerStart.y}`,
+    `L ${outerStart.x} ${outerStart.y}`,
+    `A ${outerR} ${outerR} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerR} ${innerR} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y}`,
+    'Z'
+  ].join(' ');
+
+  sectorFlashG.innerHTML = '';
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', fillColor);
+  path.setAttribute('stroke', strokeColor);
+  path.setAttribute('stroke-width', 1);
+  sectorFlashG.appendChild(path);
+}
+
+function handleOrientation(e) {
+  let heading = null;
+  if (typeof e.webkitCompassHeading === 'number') {
+    heading = e.webkitCompassHeading;
+  } else if (e.absolute && e.alpha !== null) {
+    heading = 360 - e.alpha;
+  } else if (e.alpha !== null) {
+    heading = 360 - e.alpha;
+  }
+  if (heading !== null) {
+    const h = ((heading % 360) + 360) % 360;
+    degKundali.textContent = Math.round(h) + '°';
+    dialKundali.style.transform = `rotate(${-h}deg)`;
+    checkAlignment(h);
+    updateSectorFlash(h);
+  }
+}
+
+function startCompass() {
+  statusMsg.textContent = '';
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(state => {
+      if (state === 'granted') {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        startBtn.style.display = 'none';
+        statusMsg.textContent = 'Hold phone flat. Rotate until a colored dot glows.';
+      } else {
+        statusMsg.textContent = 'Compass permission denied. Enable Motion & Orientation access in Settings.';
+      }
+    }).catch(err => {
+      statusMsg.textContent = 'Could not access compass: ' + err.message;
+    });
+  } else if ('ondeviceorientationabsolute' in window) {
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    startBtn.style.display = 'none';
+    statusMsg.textContent = 'Hold phone flat. Rotate until a colored dot glows.';
+  } else if (typeof DeviceOrientationEvent !== 'undefined') {
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    startBtn.style.display = 'none';
+    statusMsg.textContent = 'Hold phone flat. Rotate until a colored dot glows.';
+  } else {
+    statusMsg.textContent = 'Compass sensor not available on this device/browser.';
+  }
+}
+startBtn.addEventListener('click', startCompass);
+
+// ================= Save / Load Chart (localStorage, this device only) =================
+const LAST_CHART_KEY = 'kundaliLastChart';
+const SAVED_CHARTS_KEY = 'kundaliSavedCharts';
+
+function collectFormData() {
+  const data = {
+    asc: {
+      sign: document.getElementById('rashi-asc').value,
+      deg: document.getElementById('deg-asc').value,
+      min: document.getElementById('min-asc').value
+    },
+    planets: {}
+  };
+  PLANETS.forEach(p => {
+    data.planets[p.key] = {
+      sign: document.getElementById('rashi-' + p.key).value,
+      deg: document.getElementById('deg-' + p.key).value,
+      min: document.getElementById('min-' + p.key).value
+    };
+  });
+  return data;
+}
+
+function applyFormData(data) {
+  if (!data) return;
+  if (data.asc) {
+    if (data.asc.sign !== undefined) document.getElementById('rashi-asc').value = data.asc.sign;
+    if (data.asc.deg !== undefined) document.getElementById('deg-asc').value = data.asc.deg;
+    if (data.asc.min !== undefined) document.getElementById('min-asc').value = data.asc.min;
+  }
+  if (data.planets) {
+    PLANETS.forEach(p => {
+      const pd = data.planets[p.key];
+      if (!pd) return;
+      if (pd.sign !== undefined) document.getElementById('rashi-' + p.key).value = pd.sign;
+      if (pd.deg !== undefined) document.getElementById('deg-' + p.key).value = pd.deg;
+      if (pd.min !== undefined) document.getElementById('min-' + p.key).value = pd.min;
+    });
+  }
+}
+
+function saveLastChart() {
+  try {
+    localStorage.setItem(LAST_CHART_KEY, JSON.stringify(collectFormData()));
+  } catch (e) { /* storage unavailable — silently skip */ }
+}
+
+function loadLastChart() {
+  try {
+    const raw = localStorage.getItem(LAST_CHART_KEY);
+    if (raw) applyFormData(JSON.parse(raw));
+  } catch (e) { /* ignore corrupt/missing data */ }
+}
+
+function getSavedCharts() {
+  try {
+    const raw = localStorage.getItem(SAVED_CHARTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function setSavedCharts(charts) {
+  try {
+    localStorage.setItem(SAVED_CHARTS_KEY, JSON.stringify(charts));
+  } catch (e) { /* storage unavailable */ }
+}
+
+const savedChartsSelect = document.getElementById('savedChartsSelect');
+const saveStatus = document.getElementById('saveStatus');
+
+function populateSavedChartsDropdown() {
+  const charts = getSavedCharts();
+  const names = Object.keys(charts).sort();
+  savedChartsSelect.innerHTML = '<option value="">Load a saved chart…</option>' +
+    names.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+populateSavedChartsDropdown();
+loadLastChart();
+
+document.getElementById('saveChartBtn').addEventListener('click', () => {
+  const nameInput = document.getElementById('chartNameInput');
+  const name = nameInput.value.trim();
+  if (!name) {
+    saveStatus.textContent = 'Enter a name first (e.g. "My Chart").';
+    return;
+  }
+  const charts = getSavedCharts();
+  const isUpdate = Object.prototype.hasOwnProperty.call(charts, name);
+  charts[name] = collectFormData();
+  setSavedCharts(charts);
+  populateSavedChartsDropdown();
+  savedChartsSelect.value = name;
+  saveStatus.textContent = isUpdate ? `Updated "${name}".` : `Saved as "${name}".`;
+  // Name is intentionally left in place so further edits can be re-saved
+  // to the same chart without retyping the name each time.
+});
+
+savedChartsSelect.addEventListener('change', () => {
+  const name = savedChartsSelect.value;
+  if (!name) return;
+  const charts = getSavedCharts();
+  if (charts[name]) {
+    applyFormData(charts[name]);
+    document.getElementById('chartNameInput').value = name;
+    saveStatus.textContent = `Loaded "${name}". Edit values and tap Save to update it, or change the name to save as a new chart.`;
+    calcBtn.click(); // immediately recalculate so the compass/results reflect the loaded chart
+  }
+});
+
+document.getElementById('deleteChartBtn').addEventListener('click', () => {
+  const name = savedChartsSelect.value;
+  if (!name) {
+    saveStatus.textContent = 'Select a saved chart to delete.';
+    return;
+  }
+  const charts = getSavedCharts();
+  delete charts[name];
+  setSavedCharts(charts);
+  populateSavedChartsDropdown();
+  saveStatus.textContent = `Deleted "${name}".`;
+});
+
+// Auto-save the last-entered chart every time Calculate runs
+calcBtn.addEventListener('click', saveLastChart);
+</script>
+</body>
+</html>
